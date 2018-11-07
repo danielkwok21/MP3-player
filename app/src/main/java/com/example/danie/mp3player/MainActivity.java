@@ -1,6 +1,7 @@
 package com.example.danie.mp3player;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Environment;
@@ -11,26 +12,34 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.danie.mp3player.Adapters.MusicRecyclerAdapter;
+import com.example.danie.mp3player.Utils.Util;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
     private static final int PERMISSION_REQUEST_BROWSE_STORAGE = 0;
     private static final int BROWSE_AUDIO = 0;
+    private
+
+
     RecyclerView musicRecyclerView;
     RecyclerView.LayoutManager layoutManager;
-    List<File> musicList;
+    List<String> musicList;
     MusicRecyclerAdapter musicRecyclerAdapter;
-
     MP3Player player;
     Button browse;
     Button play;
@@ -54,6 +63,18 @@ public class MainActivity extends AppCompatActivity {
             browseDownloads();
         });
 
+        play.setOnClickListener((v)->{
+            playMusic();
+        });
+
+        pause.setOnClickListener((v)->{
+            pauseMusic();
+        });
+
+        stop.setOnClickListener((v)->{
+            stopMusic();
+        });
+
         //populating recyclerview
         musicList = getMusicFromStorage();
         layoutManager = new LinearLayoutManager(this);
@@ -64,29 +85,61 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public static void setMusic(Context c, View v){
+        TextView tv = v.findViewById(R.id.main_music_name_tv);
+        String musicName = tv.getText().toString();
+        Util.Toast(c, musicName);
+    }
+
+    private void playMusic(){
+
+    }
+
+    private void pauseMusic(){
+
+    }
+
+    private void stopMusic(){
+
+    }
+
     private void getPermission(){
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
             // Permission is not granted
             if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)){
-                Toast.makeText(this, "Explanation", Toast.LENGTH_SHORT).show();
+                Util.Toast(this, "Explanation");
             }else{
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_BROWSE_STORAGE);
             }
         }else{
-            Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
+            Util.Toast(this, "Permission granted");
         }
     }
 
-    private List<File> getMusicFromStorage(){
+    private List<String> getMusicFromStorage(){
         final String SDCARD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath();
+        final String[] audioFormats = {"mp3", "wav"};
+
         File downloadFolder = new File(SDCARD);
-        List<File> files = new ArrayList<>(Arrays.asList(downloadFolder.listFiles()));
+        File[] files = downloadFolder.listFiles();
+        List<String> musicFiles = new ArrayList<>();
+
         for(File file:files){
             Log.d(TAG, "File: "+file.getName());
+            String fileName = file.getName();
+            String[] splitString = fileName.split("\\.");
+            String format = splitString[splitString.length - 1];
+
+            //if audioformat is one of the supported formats, name will be added to musicFiles
+            for(String audioformat:audioFormats){
+                if(format.equals(audioformat)){
+                    musicFiles.add(file.getName());
+                }
+            }
         }
 
-        return files;
+        return musicFiles;
     }
 
     //currently not working with emulator. Not sure why.
@@ -95,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
         Intent i = new Intent(Intent.ACTION_GET_CONTENT);
         i.setType("audio/mpeg");
         startActivityForResult(i, BROWSE_AUDIO);
-        Toast.makeText(this, "browse", Toast.LENGTH_LONG).show();
+        Util.Toast(this, "browse");
     }
 
     @Override

@@ -4,18 +4,19 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import com.example.danie.mp3player.R;
 
-import java.io.File;
+import com.example.danie.mp3player.MainActivity;
+import com.example.danie.mp3player.R;
 import java.util.List;
 
 public class MusicRecyclerAdapter extends RecyclerView.Adapter<MusicRecyclerAdapter.MusicViewHolder> {
 
-    private List<File> musicList;
+    private List<String> musicList;
 
-    public MusicRecyclerAdapter(List<File> list){
+    public MusicRecyclerAdapter(List<String> list){
         musicList = list;
     }
 
@@ -28,8 +29,8 @@ public class MusicRecyclerAdapter extends RecyclerView.Adapter<MusicRecyclerAdap
         Context context = viewGroup.getContext();
         LayoutInflater layoutInflater = LayoutInflater.from(context);
 
-        TextView tv = (TextView)layoutInflater.inflate(R.layout.music_view_layout, viewGroup, false);
-        MusicViewHolder musicViewHolder = new MusicViewHolder(tv);
+        View v = layoutInflater.inflate(R.layout.music_view_layout, viewGroup, false);
+        MusicViewHolder musicViewHolder = new MusicViewHolder(v, context);
 
         return musicViewHolder;
     }
@@ -38,7 +39,7 @@ public class MusicRecyclerAdapter extends RecyclerView.Adapter<MusicRecyclerAdap
     //to set view attr based on data
     @Override
     public void onBindViewHolder(@NonNull MusicViewHolder musicViewHolder, int i) {
-        musicViewHolder.musicName.setText(musicList.get(i).getName());
+        musicViewHolder.musicName.setText(musicList.get(i));
     }
 
     //primary method #3
@@ -48,12 +49,21 @@ public class MusicRecyclerAdapter extends RecyclerView.Adapter<MusicRecyclerAdap
         return musicList.size();
     }
 
-    public static class MusicViewHolder extends RecyclerView.ViewHolder{
-        TextView musicName;
+    public static class MusicViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+        private TextView musicName;
+        private Context context;
 
-        public MusicViewHolder(@NonNull TextView itemView) {
+        public MusicViewHolder(@NonNull View itemView, Context context) {
             super(itemView);
-            musicName = itemView;
+            musicName = itemView.findViewById(R.id.main_music_name_tv);
+            this.context = context;
+            itemView.setOnClickListener(this);
+        }
+
+
+        @Override
+        public void onClick(View v) {
+            MainActivity.setMusic(context, v);
         }
     }
 }
