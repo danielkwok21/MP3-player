@@ -1,7 +1,11 @@
 package com.example.danie.mp3player;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,7 +17,8 @@ import java.io.File;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-    private static final int BROWSE_AUDIO = 0;
+    private static final int PERMISSION_REQUEST_BROWSE_STORAGE = 0;
+    private static final String SDCARD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
 
     MP3Player player;
     Button browse;
@@ -27,7 +32,20 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         player = new MP3Player();
-        player.load("/sdcard/Download/sample.mp3");
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission is not granted
+            if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)){
+                Toast.makeText(this, "Explanation", Toast.LENGTH_SHORT).show();
+            }else{
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_BROWSE_STORAGE);
+            }
+        }else{
+            Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
+        }
+
+        player.load(SDCARD+"/sample.mp3");
 
         browse = findViewById(R.id.main_browse_btn);
         play = findViewById(R.id.main_play_btn);
