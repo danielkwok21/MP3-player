@@ -41,7 +41,6 @@ public class MainActivity extends AppCompatActivity {
     static MP3Player player;
     Button browse;
     Button play;
-    Button pause;
     Button stop;
 
     @Override
@@ -54,7 +53,6 @@ public class MainActivity extends AppCompatActivity {
         browse = findViewById(R.id.main_browse_btn);
         player = new MP3Player();
         play = findViewById(R.id.main_play_btn);
-        pause = findViewById(R.id.main_pause_btn);
         stop = findViewById(R.id.main_stop_btn);
         musicRecyclerView = findViewById(R.id.music_recyclerView);
 
@@ -63,11 +61,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         play.setOnClickListener((v)->{
-            player.play();
-        });
-
-        pause.setOnClickListener((v)->{
-            player.pause();
+            togglePlayPause();
         });
 
         stop.setOnClickListener((v)->{
@@ -84,6 +78,20 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void togglePlayPause(){
+        switch(player.getState()){
+            case PLAYING:
+                player.pause();
+                break;
+            case PAUSED:
+                player.play();
+                break;
+            default:
+                player.play();
+                break;
+        }
+    }
+
     public static void setMusic(Context c, View v){
         TextView tv = v.findViewById(R.id.main_music_name_tv);
 
@@ -98,7 +106,6 @@ public class MainActivity extends AppCompatActivity {
         }
         player.load(musicPath);
         player.play();
-
     }
 
 
