@@ -33,14 +33,12 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private static final int PERMISSION_REQUEST_BROWSE_STORAGE = 0;
     private static final int BROWSE_AUDIO = 0;
-    private
-
 
     RecyclerView musicRecyclerView;
     RecyclerView.LayoutManager layoutManager;
     List<String> musicList;
     MusicRecyclerAdapter musicRecyclerAdapter;
-    MP3Player player;
+    static MP3Player player;
     Button browse;
     Button play;
     Button pause;
@@ -54,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
         getPermission();
 
         browse = findViewById(R.id.main_browse_btn);
+        player = new MP3Player();
         play = findViewById(R.id.main_play_btn);
         pause = findViewById(R.id.main_pause_btn);
         stop = findViewById(R.id.main_stop_btn);
@@ -64,15 +63,15 @@ public class MainActivity extends AppCompatActivity {
         });
 
         play.setOnClickListener((v)->{
-            playMusic();
+            player.play();
         });
 
         pause.setOnClickListener((v)->{
-            pauseMusic();
+            player.pause();
         });
 
         stop.setOnClickListener((v)->{
-            stopMusic();
+            player.stop();
         });
 
         //populating recyclerview
@@ -87,21 +86,21 @@ public class MainActivity extends AppCompatActivity {
 
     public static void setMusic(Context c, View v){
         TextView tv = v.findViewById(R.id.main_music_name_tv);
+
+        final String SDCARD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath();
         String musicName = tv.getText().toString();
+        String musicPath = SDCARD+"/"+musicName;
+
         Util.Toast(c, musicName);
-    }
 
-    private void playMusic(){
-
-    }
-
-    private void pauseMusic(){
-
-    }
-
-    private void stopMusic(){
+        if(player.getState()==MP3Player.MP3PlayerState.PLAYING){
+            player.stop();
+        }
+        player.load(musicPath);
+        player.play();
 
     }
+
 
     private void getPermission(){
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
