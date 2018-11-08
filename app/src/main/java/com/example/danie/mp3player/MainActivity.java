@@ -14,34 +14,28 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.danie.mp3player.Adapters.MusicRecyclerAdapter;
 import com.example.danie.mp3player.Utils.Util;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
     private static final int PERMISSION_REQUEST_BROWSE_STORAGE = 0;
-    private static final int BROWSE_AUDIO = 0;
 
     RecyclerView musicRecyclerView;
     RecyclerView.LayoutManager layoutManager;
     List<String> musicList;
     MusicRecyclerAdapter musicRecyclerAdapter;
     static MP3Player player;
-    Button browse;
-    Button play;
-    Button stop;
+    static ImageView play;
+    ImageView stop;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,22 +44,17 @@ public class MainActivity extends AppCompatActivity {
 
         getPermission();
 
-        browse = findViewById(R.id.main_browse_btn);
         player = new MP3Player();
-        play = findViewById(R.id.main_play_btn);
-        stop = findViewById(R.id.main_stop_btn);
+        play = findViewById(R.id.main_play_iv);
+        stop = findViewById(R.id.main_stop_iv);
         musicRecyclerView = findViewById(R.id.music_recyclerView);
-
-        browse.setOnClickListener((v)->{
-            browseDownloads();
-        });
 
         play.setOnClickListener((v)->{
             togglePlayPause();
         });
 
         stop.setOnClickListener((v)->{
-            player.stop();
+            stopMusic();
         });
 
         //populating recyclerview
@@ -75,24 +64,35 @@ public class MainActivity extends AppCompatActivity {
         musicRecyclerAdapter = new MusicRecyclerAdapter(musicList);
         musicRecyclerView.setHasFixedSize(true);
         musicRecyclerView.setAdapter(musicRecyclerAdapter);
-
     }
 
-    private void togglePlayPause(){
+    private void stopMusic(){
+        player.stop();
+        play.setImageResource(R.drawable.play);
+    }
+
+    private static void togglePlayPause(){
         switch(player.getState()){
             case PLAYING:
                 player.pause();
+                play.setImageResource(R.drawable.play);
                 break;
             case PAUSED:
                 player.play();
+                play.setImageResource(R.drawable.pause);
+                break;
+            case STOPPED:
+                player.play();
+                play.setImageResource(R.drawable.pause);
                 break;
             default:
                 player.play();
+                play.setImageResource(R.drawable.play);
                 break;
         }
     }
 
-    public static void setMusic(Context c, View v){
+    public static void selectMusic(Context c, View v){
         TextView tv = v.findViewById(R.id.main_music_name_tv);
 
         final String SDCARD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath();
@@ -105,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
             player.stop();
         }
         player.load(musicPath);
-        player.play();
+        play.setImageResource(R.drawable.pause);
     }
 
 
@@ -148,24 +148,4 @@ public class MainActivity extends AppCompatActivity {
         return musicFiles;
     }
 
-    //currently not working with emulator. Not sure why.
-    //no music can be found in download folder
-    private void browseDownloads(){
-        Intent i = new Intent(Intent.ACTION_GET_CONTENT);
-        i.setType("audio/mpeg");
-        startActivityForResult(i, BROWSE_AUDIO);
-        Util.Toast(this, "browse");
-    }
-
-    @Override
-    public void onActivityReenter(int resultCode, Intent data) {
-        super.onActivityReenter(resultCode, data);
-        switch(resultCode){
-            case 0:
-                player.load(data.getDataString());
-                break;
-            default:
-                Log.e(TAG, "Couldn't load data");
-        }
-    }
 }

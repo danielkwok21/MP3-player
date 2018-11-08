@@ -63,7 +63,7 @@ public class MusicRecyclerAdapter extends RecyclerView.Adapter<MusicRecyclerAdap
 
         @Override
         public void onClick(View v) {
-            MainActivity.setMusic(context, v);
+            MainActivity.selectMusic(context, v);
         }
     }
 }
