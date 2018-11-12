@@ -3,21 +3,17 @@ package com.example.danie.mp3player.Services;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
-import android.os.Environment;
 import android.os.IBinder;
-import android.util.Log;
 
 import com.example.danie.mp3player.MP3Player;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.text.SimpleDateFormat;
 
 public class MusicPlayerService extends Service {
     private static final String TAG = "MusicPlayerService";
-    private IBinder musicPlayerbinder;
+    private IBinder musicPlayerBinder;
     private MP3Player player;
-    private String songName = "No song";
+    private String songName = "None";
 
     public MusicPlayerService() {
     }
@@ -30,22 +26,12 @@ public class MusicPlayerService extends Service {
             player = null;
         }
         player = new MP3Player();
-        musicPlayerbinder = new MusicPlayerBinder();
+        musicPlayerBinder = new MusicPlayerBinder();
 
-    }
-
-    public String getName(){
-        return songName;
     }
 
     public int getProgress(){
         return player.getProgress();
-    }
-
-
-
-    public boolean getCompletionStatus(){
-        return player.getCompletionStatus();
     }
 
     public void setProgress(int progress){
@@ -72,7 +58,21 @@ public class MusicPlayerService extends Service {
         player.play();
     }
 
+    public String getProgressInTime(){
+        //transfer the millisecond to minutes
+            SimpleDateFormat sdf=new SimpleDateFormat("mm:ss");
+            return sdf.format(player.getProgress());
+    }
 
+    public String getProgressInTime(int progress){
+        //transfer the millisecond to minutes
+        SimpleDateFormat sdf=new SimpleDateFormat("mm:ss");
+        return sdf.format(progress);
+    }
+
+    public boolean getCompletionStatus(){
+        return player.getProgress()>=player.getDuration();
+    }
     
     public void next(){
         int duration = player.getDuration();
@@ -86,7 +86,7 @@ public class MusicPlayerService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return musicPlayerbinder;
+        return musicPlayerBinder;
     }
 
     public class MusicPlayerBinder extends Binder{

@@ -9,7 +9,6 @@ import java.io.IOException;
 public class MP3Player {
     protected MediaPlayer mediaPlayer;
     protected MP3PlayerState state;
-    protected boolean completionStatus;
     protected String filePath;
 
     public enum MP3PlayerState {
@@ -49,13 +48,6 @@ public class MP3Player {
 
         this.state = MP3PlayerState.PLAYING;
         mediaPlayer.start();
-
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-                completionStatus = true;
-            }
-        });
     }
 
     public String getFilePath() {
@@ -75,10 +67,6 @@ public class MP3Player {
             mediaPlayer.seekTo(progress);
         }
         return 0;
-    }
-
-    public boolean getCompletionStatus(){
-        return completionStatus;
     }
 
     public int getDuration() {
