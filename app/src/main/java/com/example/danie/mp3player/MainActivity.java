@@ -2,11 +2,14 @@ package com.example.danie.mp3player;
 
 import android.Manifest;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -23,6 +26,8 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.example.danie.mp3player.Adapters.MusicRecyclerAdapter;
+import com.example.danie.mp3player.Services.MusicPlayerService;
+import com.example.danie.mp3player.Services.MusicPlayerService.MusicPlayerBinder;
 import com.example.danie.mp3player.Utils.Util;
 
 import java.io.File;
@@ -35,13 +40,15 @@ public class MainActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_BROWSE_STORAGE = 0;
     private static final String CHANNEL_ID = "MP3Player";
     private static final String NO_MUSIC = "No music selected";
+    private static final int NOTI_ID = 1;
     private static String currentMusicName = NO_MUSIC;
+    private static boolean isBound = false;
 
     RecyclerView musicRecyclerView;
     RecyclerView.LayoutManager layoutManager;
     List<String> musicList;
     MusicRecyclerAdapter musicRecyclerAdapter;
-    MP3Player player;
+    MusicPlayerService musicPlayerService;
     SeekBar progress;
     Handler progressUpdateHandler;
     Runnable progressUpdateRunnable;
@@ -55,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     ImageView play;
     ImageView stop;
     SeekBar volume;
+    NotificationManagerCompat notificationManagerCompat;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,15 +70,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         getPermission();
-
-        player = new MP3Player();
+        Intent i = new Intent(this, MusicPlayerService.class);
+        startService(i);
+        bindService(i, connection, Context.BIND_AUTO_CREATE);
 
         musicRecyclerView = findViewById(R.id.music_recyclerView);
         progress = findViewById(R.id.main_progress_sb);
         play = findViewById(R.id.main_play_iv);
         stop = findViewById(R.id.main_stop_iv);
         volume = findViewById(R.id.main_volume_sb);
-
         setupRecyclerView();
 
         play.setOnClickListener((v)->{
@@ -80,16 +88,32 @@ public class MainActivity extends AppCompatActivity {
         stop.setOnClickListener((v)->{
             toggleStop();
         });
+
+
     }
 
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicPlayerBinder binder = (MusicPlayerBinder) service;
+            musicPlayerService = binder.getService();
+            isBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            isBound = false;
+        }
+    };
+
     private void setupSeekBar(){
-        progress.setMax(player.getDuration());
+        progress.setMax(musicPlayerService.getMusicDuration());
 
         progressUpdateHandler = new Handler();
         progressUpdateRunnable = new Runnable(){
             @Override
             public void run() {
-                progress.setProgress(player.getProgress());
+                progress.setProgress(musicPlayerService.getProgress());
                 progressUpdateHandler.postDelayed(this, 0);
             }
         };
@@ -99,28 +123,24 @@ public class MainActivity extends AppCompatActivity {
         progress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                Log.d(TAG, "onProgressChanged: progress: "+progress);
                 if(fromUser){
-                    player.setProgress(progress);
-                    Log.d(TAG, "onProgressChanged: playerSet: "+progress);
+                    musicPlayerService.setProgress(progress);
                 }
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-                Log.d(TAG, "onStartTrackingTouch: ");
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                Log.d(TAG, "onStopTrackingTouch: "+seekBar.getProgress());
-                player.setProgress(seekBar.getProgress());
+                musicPlayerService.setProgress(seekBar.getProgress());
             }
         });
     }
 
     private void toggleStop(){
-        player.stop();
+        musicPlayerService.stop();
         play.setImageResource(R.drawable.play);
     }
 
@@ -144,13 +164,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void togglePlayPause(){
-        switch(player.getState()){
+        switch(musicPlayerService.getState()){
             case PLAYING:
-                player.pause();
+                musicPlayerService.pause();
                 play.setImageResource(R.drawable.play);
                 break;
             case PAUSED:
-                player.play();
+                musicPlayerService.play();
                 progressUpdateHandler.removeCallbacks(progressUpdateRunnable);
                 play.setImageResource(R.drawable.pause);
                 break;
@@ -162,10 +182,34 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             default:
-                player.play();
+                musicPlayerService.play();
                 play.setImageResource(R.drawable.play);
                 break;
         }
+    }
+
+    private List<String> getMusicFromStorage(){
+        final String SDCARD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath();
+        final String[] audioFormats = {"mp3", "wav"};
+
+        File downloadFolder = new File(SDCARD);
+        File[] files = downloadFolder.listFiles();
+        List<String> musicFiles = new ArrayList<>();
+
+        for(File file:files){
+            Log.d(TAG, "File: "+file.getName());
+            String fileName = file.getName();
+            String[] splitString = fileName.split("\\.");
+            String format = splitString[splitString.length - 1];
+
+            //if audioformat is one of the supported formats, name will be added to musicFiles
+            for(String audioformat:audioFormats){
+                if(format.equals(audioformat)){
+                    musicFiles.add(file.getName());
+                }
+            }
+        }
+        return musicFiles;
     }
 
     /*
@@ -177,13 +221,13 @@ public class MainActivity extends AppCompatActivity {
 
         final String SDCARD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath();
 
-        if(player.getState()==MP3Player.MP3PlayerState.PLAYING){
-            player.stop();
+        if(musicPlayerService.getState()==MP3Player.MP3PlayerState.PLAYING){
+            musicPlayerService.stop();
         }
 
         if(currentMusicName!=NO_MUSIC){
             String musicPath = SDCARD+"/"+currentMusicName;
-            player.load(musicPath);
+            musicPlayerService.load(musicPath);
 
             setupSeekBar();
             setupNotification(currentMusicName);
@@ -209,20 +253,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString("currentMusicName", currentMusicName);
-        outState.putInt("currentProgress", player.getProgress());
+        outState.putInt("currentProgress", musicPlayerService.getProgress());
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         currentMusicName = savedInstanceState.getString("currentMusicName");
-        player.setProgress(savedInstanceState.getInt("currentProgress"));
+        musicPlayerService.setProgress(savedInstanceState.getInt("currentProgress"));
     }
-
 
     private void setupNotification(String musicName){
         notificationHandler = new Handler();
 
+        //does not start a new task if current app is running
         Intent i = new Intent(this, MainActivity.class);
         i.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -246,8 +290,8 @@ public class MainActivity extends AppCompatActivity {
                         .setContentIntent(pi)
                         .setAutoCancel(false);
 
-                NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(getApplicationContext());
-                notificationManagerCompat.notify(1, builder.build());
+                notificationManagerCompat = NotificationManagerCompat.from(getApplicationContext());
+                notificationManagerCompat.notify(NOTI_ID, builder.build());
             }
         };
         notificationThread = new Thread(notificationRunnable);
@@ -269,29 +313,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private List<String> getMusicFromStorage(){
-        final String SDCARD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath();
-        final String[] audioFormats = {"mp3", "wav"};
-
-        File downloadFolder = new File(SDCARD);
-        File[] files = downloadFolder.listFiles();
-        List<String> musicFiles = new ArrayList<>();
-
-        for(File file:files){
-            Log.d(TAG, "File: "+file.getName());
-            String fileName = file.getName();
-            String[] splitString = fileName.split("\\.");
-            String format = splitString[splitString.length - 1];
-
-            //if audioformat is one of the supported formats, name will be added to musicFiles
-            for(String audioformat:audioFormats){
-                if(format.equals(audioformat)){
-                    musicFiles.add(file.getName());
-                }
-            }
-        }
-
-        return musicFiles;
+    @Override
+    protected void onDestroy() {
+        unbindService(connection);
+        super.onDestroy();
     }
-
 }
