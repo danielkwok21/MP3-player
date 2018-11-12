@@ -1,11 +1,17 @@
 package com.example.danie.mp3player;
 
 import android.Manifest;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -28,7 +34,9 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
     private static final int PERMISSION_REQUEST_BROWSE_STORAGE = 0;
-    private static MainActivity instance;
+    private static final String CHANNEL_ID = "MP3Player";
+    private static final String NO_MUSIC = "No music selected";
+
 
     RecyclerView musicRecyclerView;
     RecyclerView.LayoutManager layoutManager;
@@ -39,7 +47,6 @@ public class MainActivity extends AppCompatActivity {
     static Handler progressUpdateHandler;
     static Runnable progressUpdateRunnable;
     static Thread progressUpdateThread;
-
     static ImageView play;
     ImageView stop;
     SeekBar volume;
@@ -60,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         volume = findViewById(R.id.main_volume_sb);
 
         setupRecyclerView();
+        setupNotification(NO_MUSIC);
 
         play.setOnClickListener((v)->{
             togglePlayPause();
@@ -72,36 +80,37 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupSeekBar(){
         progress.setMax(player.getDuration());
+
         progressUpdateHandler = new Handler();
         progressUpdateRunnable = new Runnable(){
-
             @Override
             public void run() {
                 progress.setProgress(player.getProgress());
-                Log.d(TAG, "progress: "+player.getProgress());
                 progressUpdateHandler.postDelayed(this, 0);
             }
         };
-
         progressUpdateThread = new Thread(progressUpdateRunnable);
         progressUpdateThread.start();
 
         progress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Log.d(TAG, "onProgressChanged: progress: "+progress);
                 if(fromUser){
                     player.setProgress(progress);
+                    Log.d(TAG, "onProgressChanged: playerSet: "+progress);
                 }
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-
+                Log.d(TAG, "onStartTrackingTouch: ");
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-
+                Log.d(TAG, "onStopTrackingTouch: "+seekBar.getProgress());
+                player.setProgress(seekBar.getProgress());
             }
         });
     }
@@ -158,7 +167,24 @@ public class MainActivity extends AppCompatActivity {
         }
         player.load(musicPath);
         setupSeekBar();
+        setupNotification(musicName);
         play.setImageResource(R.drawable.pause);
+    }
+
+    private void setupNotification(String musicName){
+        Intent i = new Intent(this, MainActivity.class);
+        PendingIntent pi = PendingIntent.getActivity(this, 0, i, 0);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.logo)
+                .setContentTitle(musicName)
+                .setContentText("Text")
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pi)
+                .setAutoCancel(false);
+
+        NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
+        notificationManagerCompat.notify(1, builder.build());
     }
 
 
