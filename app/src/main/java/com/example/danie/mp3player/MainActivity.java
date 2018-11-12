@@ -1,13 +1,10 @@
 package com.example.danie.mp3player;
 
 import android.Manifest;
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
@@ -44,18 +41,18 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView.LayoutManager layoutManager;
     List<String> musicList;
     MusicRecyclerAdapter musicRecyclerAdapter;
-    static MP3Player player;
-    static SeekBar progress;
-    static Handler progressUpdateHandler;
-    static Runnable progressUpdateRunnable;
-    static Thread progressUpdateThread;
-    static Handler notificationHandler;
-    static Runnable notificationRunnable;
-    static Thread notificationThread;
-    static Handler recyclerViewHandler;
-    static Runnable recyclerViewRunnable;
-    static Thread recyclerViewThread;
-    static ImageView play;
+    MP3Player player;
+    SeekBar progress;
+    Handler progressUpdateHandler;
+    Runnable progressUpdateRunnable;
+    Thread progressUpdateThread;
+    Handler notificationHandler;
+    Runnable notificationRunnable;
+    Thread notificationThread;
+    Handler recyclerViewHandler;
+    Runnable recyclerViewRunnable;
+    Thread recyclerViewThread;
+    ImageView play;
     ImageView stop;
     SeekBar volume;
 
@@ -75,14 +72,13 @@ public class MainActivity extends AppCompatActivity {
         volume = findViewById(R.id.main_volume_sb);
 
         setupRecyclerView();
-        setMusic(currentMusicName);
 
         play.setOnClickListener((v)->{
             togglePlayPause();
         });
 
         stop.setOnClickListener((v)->{
-            stopMusic();
+            toggleStop();
         });
     }
 
@@ -123,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void stopMusic(){
+    private void toggleStop(){
         player.stop();
         play.setImageResource(R.drawable.play);
     }
@@ -159,8 +155,11 @@ public class MainActivity extends AppCompatActivity {
                 play.setImageResource(R.drawable.pause);
                 break;
             case STOPPED:
-                setMusic(currentMusicName);
-                play.setImageResource(R.drawable.pause);
+                if(setMusic()){
+                    play.setImageResource(R.drawable.pause);
+                }else{
+                    Util.Toast(getApplicationContext(), "No music selected");
+                }
                 break;
             default:
                 player.play();
@@ -169,7 +168,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setMusic(String musicName){
+    /*
+    * loads music based on currentMusicName
+    * change play/pause button view
+    * setup notification
+    * */
+    private boolean setMusic(){
 
         final String SDCARD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath();
 
@@ -177,29 +181,54 @@ public class MainActivity extends AppCompatActivity {
             player.stop();
         }
 
-        String musicPath = SDCARD+"/"+musicName;
-        player.load(musicPath);
+        if(currentMusicName!=NO_MUSIC){
+            String musicPath = SDCARD+"/"+currentMusicName;
+            player.load(musicPath);
 
-        setupSeekBar();
-        setupNotification(musicName);
-        play.setImageResource(R.drawable.pause);
+            setupSeekBar();
+            setupNotification(currentMusicName);
+            play.setImageResource(R.drawable.pause);
+
+            return true;
+        }
+        return false;
     }
 
-
+    /*
+    * if music is selected from recycler view
+    * */
     public void selectMusicFromView(Context c, View v){
         TextView tv = v.findViewById(R.id.main_music_name_tv);
 
         String musicName = tv.getText().toString();
         currentMusicName = musicName;
-
-        Util.Toast(c, currentMusicName);
-        setMusic(musicName);
+        setMusic();
     }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("currentMusicName", currentMusicName);
+        outState.putInt("currentProgress", player.getProgress());
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        currentMusicName = savedInstanceState.getString("currentMusicName");
+        player.setProgress(savedInstanceState.getInt("currentProgress"));
+    }
+
 
     private void setupNotification(String musicName){
         notificationHandler = new Handler();
 
         Intent i = new Intent(this, MainActivity.class);
+        i.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        i.setAction(Intent.ACTION_MAIN);
+        i.addCategory(Intent.CATEGORY_LAUNCHER);
+
         PendingIntent pi = PendingIntent.getActivity(this, 0, i, 0);
 
         notificationRunnable = new Runnable(){
