@@ -11,7 +11,6 @@ import android.media.AudioManager;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
-import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -79,8 +78,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
-        setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         //get user permission during runtime
         getPermission();
@@ -91,9 +88,10 @@ public class MainActivity extends AppCompatActivity {
         bindService(i, connection, Context.BIND_AUTO_CREATE);
 
         initComponents();
-
         setupRecyclerView();
-        setupVolumeBar();
+        audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
+        setupVolume();
 
         prev.setOnClickListener((v)->{
             prev();
@@ -177,6 +175,9 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     progressBar.setProgress(player.getProgress());
                     progressUpdateHandler.postDelayed(this, 0);
+                    if(player.getCompletionStatus()){
+                        Log.d(TAG, "run: Complete");
+                    }
                 }
             };
             progressUpdateThread = new Thread(progressUpdateRunnable);
@@ -204,14 +205,33 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setupVolumeBar(){
+    private void setupVolume(){
         volumeBar.setMax(audioManager.getStreamMaxVolume((AudioManager.STREAM_MUSIC)));
         volumeBar.setProgress(audioManager.getStreamVolume((AudioManager.STREAM_MUSIC)));
+
+        //default
+        int currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        if (currentVolume<5){
+            volumeIcon.setImageResource(R.drawable.vol_low);
+        }else if(currentVolume>=5 && currentVolume<=10){
+            volumeIcon.setImageResource(R.drawable.vol_mid);
+        }else if(currentVolume>10){
+            volumeIcon.setImageResource(R.drawable.vol_high);
+        }
 
         volumeBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0);
+                int currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+
+                if (currentVolume<5){
+                    volumeIcon.setImageResource(R.drawable.vol_low);
+                }else if(currentVolume>=5 && currentVolume<=10){
+                    volumeIcon.setImageResource(R.drawable.vol_mid);
+                }else if(currentVolume>10){
+                    volumeIcon.setImageResource(R.drawable.vol_high);
+                }
             }
 
             @Override

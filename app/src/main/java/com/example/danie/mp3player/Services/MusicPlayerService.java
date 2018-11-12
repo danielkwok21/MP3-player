@@ -42,6 +42,12 @@ public class MusicPlayerService extends Service {
         return player.getProgress();
     }
 
+
+
+    public boolean getCompletionStatus(){
+        return player.getCompletionStatus();
+    }
+
     public void setProgress(int progress){
         player.setProgress(progress);
     }
