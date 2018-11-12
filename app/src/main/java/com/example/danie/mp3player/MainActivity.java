@@ -42,7 +42,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String NO_MUSIC = "No music selected";
     private static final int NOTI_ID = 1;
     private static String currentMusicName = NO_MUSIC;
-    private static boolean isBound = false;
+    final String SDCARD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
+
 
     RecyclerView musicRecyclerView;
     RecyclerView.LayoutManager layoutManager;
@@ -97,12 +98,11 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicPlayerBinder binder = (MusicPlayerBinder) service;
             musicPlayerService = binder.getService();
-            isBound = true;
+
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            isBound = false;
         }
     };
 
@@ -189,7 +189,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private List<String> getMusicFromStorage(){
-        final String SDCARD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath();
         final String[] audioFormats = {"mp3", "wav"};
 
         File downloadFolder = new File(SDCARD);
@@ -218,9 +217,6 @@ public class MainActivity extends AppCompatActivity {
     * setup notification
     * */
     private boolean setMusic(){
-
-        final String SDCARD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath();
-
         if(musicPlayerService.getState()==MP3Player.MP3PlayerState.PLAYING){
             musicPlayerService.stop();
         }
