@@ -214,6 +214,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadNextSong(){
         int index = musicList.indexOf(currentName);
+        //get next song. If song is at end of list, loop to top
         if(index<musicList.size()-1){
             currentName = musicList.get(index+1);
         }else{
@@ -226,11 +227,11 @@ public class MainActivity extends AppCompatActivity {
         switch(player.getState()){
             case PLAYING:
                 player.pause();
-                play.setImageResource(R.drawable.pause);
+                play.setImageResource(R.drawable.play);
                 break;
             case PAUSED:
                 player.play();
-                play.setImageResource(R.drawable.play);
+                play.setImageResource(R.drawable.pause);
                 progressUpdateHandler.removeCallbacks(progressUpdateRunnable);
                 break;
             case STOPPED:
