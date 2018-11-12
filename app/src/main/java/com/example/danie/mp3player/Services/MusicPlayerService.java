@@ -65,6 +65,8 @@ public class MusicPlayerService extends Service {
     public void play(){
         player.play();
     }
+
+
     
     public void next(){
         int duration = player.getDuration();

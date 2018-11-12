@@ -17,6 +17,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+
     <SeekBar
         android:id="@+id/main_progress_sb"
         android:layout_width="314dp"
@@ -27,16 +28,6 @@
         app:layout_constraintBottom_toTopOf="@+id/main_play_iv"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
-
-    <ImageView
-        android:id="@+id/main_shuffle_iv"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginEnd="20dp"
-        app:layout_constraintBottom_toBottomOf="@+id/main_prev_iv"
-        app:layout_constraintEnd_toStartOf="@+id/main_prev_iv"
-        app:layout_constraintTop_toTopOf="@+id/main_prev_iv"
-        app:srcCompat="@drawable/shuffle" />
 
     <ImageView
         android:id="@+id/main_prev_iv"
@@ -71,30 +62,22 @@
         app:srcCompat="@drawable/next" />
 
     <ImageView
-        android:id="@+id/main_repeat_iv"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginStart="20dp"
-        app:layout_constraintBottom_toBottomOf="@+id/main_next_iv"
-        app:layout_constraintStart_toEndOf="@+id/main_next_iv"
-        app:layout_constraintTop_toTopOf="@+id/main_next_iv"
-        app:srcCompat="@drawable/repeat" />
-
-    <ImageView
         android:id="@+id/main_volume_iv"
         android:layout_width="30dp"
         android:layout_height="30dp"
+        android:layout_marginStart="8dp"
         android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/main_shuffle_iv"
+        app:layout_constraintStart_toStartOf="@+id/main_progress_sb"
         app:srcCompat="@drawable/vol_high" />
 
     <SeekBar
         android:id="@+id/main_volume_sb"
         android:layout_width="241dp"
         android:layout_height="12dp"
+        android:layout_marginEnd="4dp"
         android:layout_marginBottom="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/main_repeat_iv" />
+        app:layout_constraintEnd_toEndOf="@+id/main_progress_sb" />
 
 </android.support.constraint.ConstraintLayout>

@@ -7,9 +7,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -33,7 +35,6 @@ import com.example.danie.mp3player.Utils.Util;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -62,22 +63,24 @@ public class MainActivity extends AppCompatActivity {
     private Runnable recyclerViewRunnable;
     private Thread recyclerViewThread;
     private NotificationManagerCompat notificationManagerCompat;
+    private AudioManager audioManager;
 
     //UI components
-    private SeekBar progress;
-    private ImageView shuffle;
+    private SeekBar progressBar;
     private ImageView prev;
     private ImageView play;
     private ImageView next;
-    private ImageView repeat;
     private ImageView volumeIcon;
-    private SeekBar volume;
+    private SeekBar volumeBar;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         //get user permission during runtime
         getPermission();
@@ -90,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
         initComponents();
 
         setupRecyclerView();
+        setupVolumeBar();
 
         prev.setOnClickListener((v)->{
             prev();
@@ -106,14 +110,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void initComponents(){
         musicRecyclerView = findViewById(R.id.music_recyclerView);
-        progress = findViewById(R.id.main_progress_sb);
-        shuffle = findViewById(R.id.main_shuffle_iv);
+        progressBar = findViewById(R.id.main_progress_sb);
         prev = findViewById(R.id.main_prev_iv);
         play = findViewById(R.id.main_play_iv);
         next = findViewById(R.id.main_next_iv);
-        repeat = findViewById(R.id.main_repeat_iv);
         volumeIcon = findViewById(R.id.main_volume_iv);
-        volume = findViewById(R.id.main_volume_sb);
+        volumeBar = findViewById(R.id.main_volume_sb);
     }
 
     //setting up service connection
@@ -164,23 +166,23 @@ public class MainActivity extends AppCompatActivity {
         recyclerViewThread.start();
     }
 
-    //setup music progress bar
+    //setup music progressBar bar
     private void setupProgressBar(){
-        progress.setMax(player.getSongDuration());
+        progressBar.setMax(player.getSongDuration());
 
         try{
             progressUpdateHandler = new Handler();
             progressUpdateRunnable = new Runnable(){
                 @Override
                 public void run() {
-                    progress.setProgress(player.getProgress());
+                    progressBar.setProgress(player.getProgress());
                     progressUpdateHandler.postDelayed(this, 0);
                 }
             };
             progressUpdateThread = new Thread(progressUpdateRunnable);
             progressUpdateThread.start();
 
-            progress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            progressBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                     if(fromUser){
@@ -200,6 +202,27 @@ public class MainActivity extends AppCompatActivity {
         }catch(Exception e){
             Log.d(TAG, "setupProgressBar: "+e);
         }
+    }
+
+    private void setupVolumeBar(){
+        volumeBar.setMax(audioManager.getStreamMaxVolume((AudioManager.STREAM_MUSIC)));
+        volumeBar.setProgress(audioManager.getStreamVolume((AudioManager.STREAM_MUSIC)));
+
+        volumeBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
     }
 
     private void prev(){
@@ -256,7 +279,6 @@ public class MainActivity extends AppCompatActivity {
         List<String> musicFiles = new ArrayList<>();
 
         for(File file:files){
-            Log.d(TAG, "File: "+file.getName());
             String fileName = file.getName();
             String[] splitString = fileName.split("\\.");
             String format = splitString[splitString.length - 1];
