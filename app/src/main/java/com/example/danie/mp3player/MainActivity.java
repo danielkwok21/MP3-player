@@ -33,6 +33,7 @@ import com.example.danie.mp3player.Utils.Util;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -199,7 +200,6 @@ public class MainActivity extends AppCompatActivity {
         }catch(Exception e){
             Log.d(TAG, "setupProgressBar: "+e);
         }
-
     }
 
     private void prev(){
@@ -209,7 +209,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void next(){
         player.next();
-        play.setImageResource(R.drawable.play);
+        loadNextSong();
+    }
+
+    private void loadNextSong(){
+        int index = musicList.indexOf(currentName);
+        if(index<musicList.size()-1){
+            currentName = musicList.get(index+1);
+        }else{
+            currentName = musicList.get(0);
+        }
+        setMusic();
     }
 
     private void playPause(){
