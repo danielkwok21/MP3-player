@@ -32,8 +32,6 @@ public class MusicPlayerService extends Service {
         player = new MP3Player();
         musicPlayerbinder = new MusicPlayerBinder();
 
-        Log.d(TAG, "onCreate: ");
-
     }
 
     public String getName(){
