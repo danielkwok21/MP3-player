@@ -41,7 +41,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String CHANNEL_ID = "MP3Player";
     private static final String NO_MUSIC = "No music selected";
     private static final int NOTI_ID = 1;
-    private static String currentMusicName = NO_MUSIC;
+    private static String currentName = NO_MUSIC;
+    private static int currentProgress = 0;
     private static final String SDCARD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
 
 
@@ -60,7 +61,6 @@ public class MainActivity extends AppCompatActivity {
     private Runnable recyclerViewRunnable;
     private Thread recyclerViewThread;
     private NotificationManagerCompat notificationManagerCompat;
-    private ServiceConnection connection;
 
     //UI components
     private SeekBar progress;
@@ -77,19 +77,6 @@ public class MainActivity extends AppCompatActivity {
         //get user permission during runtime
         getPermission();
 
-        //setting up service connection
-        connection = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                MusicPlayerBinder binder = (MusicPlayerBinder) service;
-                player = binder.getService();
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-            }
-        };
-
         //start MusicPlayerService
         Intent i = new Intent(this, MusicPlayerService.class);
         startService(i);
@@ -101,9 +88,8 @@ public class MainActivity extends AppCompatActivity {
         stop = findViewById(R.id.main_stop_iv);
         volume = findViewById(R.id.main_volume_sb);
 
-//        Log.d(TAG, "onCreate: "+player.getState());
+
         setupRecyclerView();
-        setupProgressBar();
 
         play.setOnClickListener((v)->{
             togglePlayPause();
@@ -114,7 +100,33 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    //setting up service connection
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicPlayerBinder binder = (MusicPlayerBinder) service;
+            player = binder.getService();
+            setupProgressBar();
+            switch (player.getState()){
+                case PLAYING:
+                    play.setImageResource(R.drawable.pause);
+                    break;
+                case PAUSED:
+                    play.setImageResource(R.drawable.play);
+                    break;
+                case STOPPED:
+                    play.setImageResource(R.drawable.play);
+                    break;
+                default:
+                    play.setImageResource(R.drawable.play);
+                    break;
+            }
+        }
 
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+        }
+    };
 
     private void setupRecyclerView(){
 
@@ -140,34 +152,39 @@ public class MainActivity extends AppCompatActivity {
     private void setupProgressBar(){
         progress.setMax(player.getMusicDuration());
 
-        progressUpdateHandler = new Handler();
-        progressUpdateRunnable = new Runnable(){
-            @Override
-            public void run() {
-                progress.setProgress(player.getProgress());
-                progressUpdateHandler.postDelayed(this, 0);
-            }
-        };
-        progressUpdateThread = new Thread(progressUpdateRunnable);
-        progressUpdateThread.start();
-
-        progress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if(fromUser){
-                    player.setProgress(progress);
+        try{
+            progressUpdateHandler = new Handler();
+            progressUpdateRunnable = new Runnable(){
+                @Override
+                public void run() {
+                    progress.setProgress(player.getProgress());
+                    progressUpdateHandler.postDelayed(this, 0);
                 }
-            }
+            };
+            progressUpdateThread = new Thread(progressUpdateRunnable);
+            progressUpdateThread.start();
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
+            progress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    if(fromUser){
+                        player.setProgress(progress);
+                    }
+                }
 
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                player.setProgress(seekBar.getProgress());
-            }
-        });
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                    player.setProgress(seekBar.getProgress());
+                }
+            });
+        }catch(Exception e){
+            Log.d(TAG, "setupProgressBar: "+e);
+        }
+
     }
 
     private void toggleStop(){
@@ -179,23 +196,23 @@ public class MainActivity extends AppCompatActivity {
         switch(player.getState()){
             case PLAYING:
                 player.pause();
-                play.setImageResource(R.drawable.play);
+                play.setImageResource(R.drawable.pause);
                 break;
             case PAUSED:
                 player.play();
+                play.setImageResource(R.drawable.play);
                 progressUpdateHandler.removeCallbacks(progressUpdateRunnable);
-                play.setImageResource(R.drawable.pause);
                 break;
             case STOPPED:
                 if(setMusic()){
-                    play.setImageResource(R.drawable.pause);
+                    play.setImageResource(R.drawable.play);
                 }else{
                     Util.Toast(getApplicationContext(), "No music selected");
                 }
                 break;
             default:
-                player.play();
                 play.setImageResource(R.drawable.play);
+                player.play();
                 break;
         }
     }
@@ -233,8 +250,8 @@ public class MainActivity extends AppCompatActivity {
             player.stop();
         }
 
-        if(!currentMusicName.equals(NO_MUSIC)){
-            String musicPath = SDCARD+"/"+currentMusicName;
+        if(!currentName.equals(NO_MUSIC)){
+            String musicPath = SDCARD+"/"+currentName;
             player.load(musicPath);
 
             setupProgressBar();
@@ -253,22 +270,22 @@ public class MainActivity extends AppCompatActivity {
         TextView tv = v.findViewById(R.id.main_music_name_tv);
 
         String musicName = tv.getText().toString();
-        currentMusicName = musicName;
+        currentName = musicName;
         setMusic();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString("currentMusicName", currentMusicName);
+        outState.putString("currentName", currentName);
         outState.putInt("currentProgress", player.getProgress());
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        currentMusicName = savedInstanceState.getString("currentMusicName");
-        player.setProgress(savedInstanceState.getInt("currentProgress"));
+        currentName = savedInstanceState.getString("currentName");
+        currentProgress = savedInstanceState.getInt("currentProgress");
     }
 
     private void setupNotification(){
@@ -288,7 +305,7 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
 
                 RemoteViews notificationLayout = new RemoteViews(getPackageName(), R.layout.notification_small_layout);
-                notificationLayout.setTextViewText(R.id.notification_music_name_tv, currentMusicName);
+                notificationLayout.setTextViewText(R.id.notification_music_name_tv, currentName);
 
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
                         .setSmallIcon(R.drawable.logo)
@@ -323,8 +340,10 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        unbindService(connection);
-        connection = null;
         super.onDestroy();
+        if(connection!=null){
+            unbindService(connection);
+            connection = null;
+        }
     }
 }
