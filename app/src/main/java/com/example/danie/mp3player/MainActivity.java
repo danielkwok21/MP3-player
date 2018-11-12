@@ -39,7 +39,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String CHANNEL_ID = "MP3Player";
     private static final String NO_MUSIC = "No music selected";
 
-
     RecyclerView musicRecyclerView;
     RecyclerView.LayoutManager layoutManager;
     List<String> musicList;
@@ -49,6 +48,12 @@ public class MainActivity extends AppCompatActivity {
     static Handler progressUpdateHandler;
     static Runnable progressUpdateRunnable;
     static Thread progressUpdateThread;
+    static Handler notificationHandler;
+    static Runnable notificationRunnable;
+    static Thread notificationThread;
+    static Handler recyclerViewHandler;
+    static Runnable recyclerViewRunnable;
+    static Thread recyclerViewThread;
     static ImageView play;
     ImageView stop;
     SeekBar volume;
@@ -123,14 +128,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView(){
-
-        //populating recyclerview
-        musicList = getMusicFromStorage();
-        layoutManager = new LinearLayoutManager(this);
-        musicRecyclerView.setLayoutManager(layoutManager);
-        musicRecyclerAdapter = new MusicRecyclerAdapter(musicList);
-        musicRecyclerView.setHasFixedSize(true);
-        musicRecyclerView.setAdapter(musicRecyclerAdapter);
+        recyclerViewHandler = new Handler();
+        recyclerViewRunnable = new Runnable(){
+            @Override
+            public void run() {
+                //populating recyclerview
+                musicList = getMusicFromStorage();
+                layoutManager = new LinearLayoutManager(getApplicationContext());
+                musicRecyclerView.setLayoutManager(layoutManager);
+                musicRecyclerAdapter = new MusicRecyclerAdapter(musicList);
+                musicRecyclerView.setHasFixedSize(true);
+                musicRecyclerView.setAdapter(musicRecyclerAdapter);
+            }
+        };
+        recyclerViewThread = new Thread(recyclerViewRunnable);
+        recyclerViewThread.start();
     }
 
     private static void togglePlayPause(){
@@ -168,28 +180,39 @@ public class MainActivity extends AppCompatActivity {
             player.stop();
         }
         player.load(musicPath);
+
         setupSeekBar();
         setupNotification(musicName);
         play.setImageResource(R.drawable.pause);
     }
 
     private void setupNotification(String musicName){
+        notificationHandler = new Handler();
+
         Intent i = new Intent(this, MainActivity.class);
         PendingIntent pi = PendingIntent.getActivity(this, 0, i, 0);
 
-        RemoteViews notificationLayout = new RemoteViews(getPackageName(), R.layout.notification_small_layout);
-        notificationLayout.setTextViewText(R.id.notification_music_name_tv, musicName);
+        notificationRunnable = new Runnable(){
+            @Override
+            public void run() {
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.logo)
-                .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
-                .setCustomContentView(notificationLayout)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setContentIntent(pi)
-                .setAutoCancel(false);
+                RemoteViews notificationLayout = new RemoteViews(getPackageName(), R.layout.notification_small_layout);
+                notificationLayout.setTextViewText(R.id.notification_music_name_tv, musicName);
 
-        NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
-        notificationManagerCompat.notify(1, builder.build());
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                        .setSmallIcon(R.drawable.logo)
+                        .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
+                        .setCustomContentView(notificationLayout)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setContentIntent(pi)
+                        .setAutoCancel(false);
+
+                NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(getApplicationContext());
+                notificationManagerCompat.notify(1, builder.build());
+            }
+        };
+        notificationThread = new Thread(notificationRunnable);
+        notificationThread.start();
     }
 
 
