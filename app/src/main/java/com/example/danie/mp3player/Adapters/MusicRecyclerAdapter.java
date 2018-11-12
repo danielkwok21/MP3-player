@@ -60,10 +60,12 @@ public class MusicRecyclerAdapter extends RecyclerView.Adapter<MusicRecyclerAdap
             itemView.setOnClickListener(this);
         }
 
-
         @Override
         public void onClick(View v) {
-            MainActivity.selectMusic(context, v);
+            if(context instanceof MainActivity){
+                ((MainActivity)context).selectMusic(context, v);
+            }
         }
     }
+
 }

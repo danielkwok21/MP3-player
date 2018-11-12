@@ -62,6 +62,14 @@ public class MP3Player {
         return 0;
     }
 
+    public int setProgress(int progress){
+        if(mediaPlayer!=null) {
+            mediaPlayer.seekTo(progress);
+        }
+        return 0;
+    }
+
+
     public int getDuration() {
         if(mediaPlayer!=null)
             if(this.state == MP3PlayerState.PAUSED || this.state == MP3PlayerState.PLAYING)

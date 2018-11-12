@@ -2,9 +2,9 @@ package com.example.danie.mp3player;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -13,8 +13,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.example.danie.mp3player.Adapters.MusicRecyclerAdapter;
@@ -28,14 +28,21 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
     private static final int PERMISSION_REQUEST_BROWSE_STORAGE = 0;
+    private static MainActivity instance;
 
     RecyclerView musicRecyclerView;
     RecyclerView.LayoutManager layoutManager;
     List<String> musicList;
     MusicRecyclerAdapter musicRecyclerAdapter;
     static MP3Player player;
+    static SeekBar progress;
+    static Handler progressUpdateHandler;
+    static Runnable progressUpdateRunnable;
+    static Thread progressUpdateThread;
+
     static ImageView play;
     ImageView stop;
+    SeekBar volume;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,9 +52,14 @@ public class MainActivity extends AppCompatActivity {
         getPermission();
 
         player = new MP3Player();
+
+        musicRecyclerView = findViewById(R.id.music_recyclerView);
+        progress = findViewById(R.id.main_progress_sb);
         play = findViewById(R.id.main_play_iv);
         stop = findViewById(R.id.main_stop_iv);
-        musicRecyclerView = findViewById(R.id.music_recyclerView);
+        volume = findViewById(R.id.main_volume_sb);
+
+        setupRecyclerView();
 
         play.setOnClickListener((v)->{
             togglePlayPause();
@@ -56,6 +68,50 @@ public class MainActivity extends AppCompatActivity {
         stop.setOnClickListener((v)->{
             stopMusic();
         });
+    }
+
+    private void setupSeekBar(){
+        progress.setMax(player.getDuration());
+        progressUpdateHandler = new Handler();
+        progressUpdateRunnable = new Runnable(){
+
+            @Override
+            public void run() {
+                progress.setProgress(player.getProgress());
+                Log.d(TAG, "progress: "+player.getProgress());
+                progressUpdateHandler.postDelayed(this, 0);
+            }
+        };
+
+        progressUpdateThread = new Thread(progressUpdateRunnable);
+        progressUpdateThread.start();
+
+        progress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(fromUser){
+                    player.setProgress(progress);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+    }
+
+    private void stopMusic(){
+        player.stop();
+        play.setImageResource(R.drawable.play);
+    }
+
+    private void setupRecyclerView(){
 
         //populating recyclerview
         musicList = getMusicFromStorage();
@@ -66,11 +122,6 @@ public class MainActivity extends AppCompatActivity {
         musicRecyclerView.setAdapter(musicRecyclerAdapter);
     }
 
-    private void stopMusic(){
-        player.stop();
-        play.setImageResource(R.drawable.play);
-    }
-
     private static void togglePlayPause(){
         switch(player.getState()){
             case PLAYING:
@@ -79,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case PAUSED:
                 player.play();
+                progressUpdateHandler.removeCallbacks(progressUpdateRunnable);
                 play.setImageResource(R.drawable.pause);
                 break;
             case STOPPED:
@@ -92,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public static void selectMusic(Context c, View v){
+    public void selectMusic(Context c, View v){
         TextView tv = v.findViewById(R.id.main_music_name_tv);
 
         final String SDCARD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath();
@@ -105,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
             player.stop();
         }
         player.load(musicPath);
+        setupSeekBar();
         play.setImageResource(R.drawable.pause);
     }
 
