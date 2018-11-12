@@ -64,8 +64,12 @@ public class MainActivity extends AppCompatActivity {
 
     //UI components
     private SeekBar progress;
+    private ImageView shuffle;
+    private ImageView prev;
     private ImageView play;
-    private ImageView stop;
+    private ImageView next;
+    private ImageView repeat;
+    private ImageView volumeIcon;
     private SeekBar volume;
 
 
@@ -82,22 +86,33 @@ public class MainActivity extends AppCompatActivity {
         startService(i);
         bindService(i, connection, Context.BIND_AUTO_CREATE);
 
-        musicRecyclerView = findViewById(R.id.music_recyclerView);
-        progress = findViewById(R.id.main_progress_sb);
-        play = findViewById(R.id.main_play_iv);
-        stop = findViewById(R.id.main_stop_iv);
-        volume = findViewById(R.id.main_volume_sb);
-
+        initComponents();
 
         setupRecyclerView();
 
-        play.setOnClickListener((v)->{
-            togglePlayPause();
+        prev.setOnClickListener((v)->{
+            prev();
         });
 
-        stop.setOnClickListener((v)->{
-            toggleStop();
+        play.setOnClickListener((v)->{
+            playPause();
         });
+
+        next.setOnClickListener((v)->{
+            next();
+        });
+    }
+
+    private void initComponents(){
+        musicRecyclerView = findViewById(R.id.music_recyclerView);
+        progress = findViewById(R.id.main_progress_sb);
+        shuffle = findViewById(R.id.main_shuffle_iv);
+        prev = findViewById(R.id.main_prev_iv);
+        play = findViewById(R.id.main_play_iv);
+        next = findViewById(R.id.main_next_iv);
+        repeat = findViewById(R.id.main_repeat_iv);
+        volumeIcon = findViewById(R.id.main_volume_iv);
+        volume = findViewById(R.id.main_volume_sb);
     }
 
     //setting up service connection
@@ -150,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
 
     //setup music progress bar
     private void setupProgressBar(){
-        progress.setMax(player.getMusicDuration());
+        progress.setMax(player.getSongDuration());
 
         try{
             progressUpdateHandler = new Handler();
@@ -187,12 +202,17 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void toggleStop(){
+    private void prev(){
         player.stop();
         play.setImageResource(R.drawable.play);
     }
 
-    private void togglePlayPause(){
+    private void next(){
+        player.next();
+        play.setImageResource(R.drawable.play);
+    }
+
+    private void playPause(){
         switch(player.getState()){
             case PLAYING:
                 player.pause();
@@ -205,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case STOPPED:
                 if(setMusic()){
-                    play.setImageResource(R.drawable.play);
+                    play.setImageResource(R.drawable.pause);
                 }else{
                     Util.Toast(getApplicationContext(), "No music selected");
                 }
@@ -322,7 +342,6 @@ public class MainActivity extends AppCompatActivity {
         notificationThread = new Thread(notificationRunnable);
         notificationThread.start();
     }
-
 
     private void getPermission(){
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)

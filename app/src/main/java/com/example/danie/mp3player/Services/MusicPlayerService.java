@@ -17,7 +17,7 @@ public class MusicPlayerService extends Service {
     private static final String TAG = "MusicPlayerService";
     private IBinder musicPlayerbinder;
     private MP3Player player;
-    private String musicName = "No music";
+    private String songName = "No song";
 
     public MusicPlayerService() {
     }
@@ -35,7 +35,7 @@ public class MusicPlayerService extends Service {
     }
 
     public String getName(){
-        return musicName;
+        return songName;
     }
 
     public int getProgress(){
@@ -46,7 +46,7 @@ public class MusicPlayerService extends Service {
         player.setProgress(progress);
     }
 
-    public int getMusicDuration(){
+    public int getSongDuration(){
         return player.getDuration();
     }
 
@@ -61,12 +61,19 @@ public class MusicPlayerService extends Service {
     public void pause(){
         player.pause();
     }
+    
     public void play(){
         player.play();
     }
+    
+    public void next(){
+        int duration = player.getDuration();
+        player.setProgress(duration);
+    }
 
-    public void load(String musicPath){
-        player.load(musicPath);
+
+    public void load(String songPath){
+        player.load(songPath);
     }
 
     @Override
