@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_BROWSE_STORAGE = 0;
     private static final String CHANNEL_ID = "MP3Player";
     private static final String NO_MUSIC = "No music selected";
+    private static String currentMusicName = NO_MUSIC;
 
     RecyclerView musicRecyclerView;
     RecyclerView.LayoutManager layoutManager;
@@ -74,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
         volume = findViewById(R.id.main_volume_sb);
 
         setupRecyclerView();
-        setupNotification(NO_MUSIC);
+        setMusic(currentMusicName);
 
         play.setOnClickListener((v)->{
             togglePlayPause();
@@ -139,13 +140,14 @@ public class MainActivity extends AppCompatActivity {
                 musicRecyclerAdapter = new MusicRecyclerAdapter(musicList);
                 musicRecyclerView.setHasFixedSize(true);
                 musicRecyclerView.setAdapter(musicRecyclerAdapter);
+
             }
         };
         recyclerViewThread = new Thread(recyclerViewRunnable);
         recyclerViewThread.start();
     }
 
-    private static void togglePlayPause(){
+    private void togglePlayPause(){
         switch(player.getState()){
             case PLAYING:
                 player.pause();
@@ -157,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
                 play.setImageResource(R.drawable.pause);
                 break;
             case STOPPED:
-                player.play();
+                setMusic(currentMusicName);
                 play.setImageResource(R.drawable.pause);
                 break;
             default:
@@ -167,23 +169,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void selectMusic(Context c, View v){
-        TextView tv = v.findViewById(R.id.main_music_name_tv);
+    private void setMusic(String musicName){
 
         final String SDCARD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath();
-        String musicName = tv.getText().toString();
-        String musicPath = SDCARD+"/"+musicName;
-
-        Util.Toast(c, musicName);
 
         if(player.getState()==MP3Player.MP3PlayerState.PLAYING){
             player.stop();
         }
+
+        String musicPath = SDCARD+"/"+musicName;
         player.load(musicPath);
 
         setupSeekBar();
         setupNotification(musicName);
         play.setImageResource(R.drawable.pause);
+    }
+
+
+    public void selectMusicFromView(Context c, View v){
+        TextView tv = v.findViewById(R.id.main_music_name_tv);
+
+        String musicName = tv.getText().toString();
+        currentMusicName = musicName;
+
+        Util.Toast(c, currentMusicName);
+        setMusic(musicName);
     }
 
     private void setupNotification(String musicName){
