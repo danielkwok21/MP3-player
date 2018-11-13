@@ -185,14 +185,16 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     progressBar.setProgress(player.getProgress());
                     progressUpdateHandler.postDelayed(this, 0);
+                    if(player.getCompletionStatus()){
+                        loadNextSong();
+                    }
+                    progressUpdateHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            progressTime.setText(player.getProgressInTime());
 
-                        progressUpdateHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                progressTime.setText(player.getProgressInTime());
-                            }
-                        });
-
+                        }
+                    });
                 }
             };
             progressUpdateThread = new Thread(progressUpdateRunnable);

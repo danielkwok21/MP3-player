@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 
 import com.example.danie.mp3player.MP3Player;
 
@@ -71,7 +72,10 @@ public class MusicPlayerService extends Service {
     }
 
     public boolean getCompletionStatus(){
-        return player.getProgress()>=player.getDuration();
+        if(player.getState()==MP3Player.MP3PlayerState.PLAYING){
+            return player.getProgress()>=player.getDuration();
+        }
+        return false;
     }
     
     public void next(){
