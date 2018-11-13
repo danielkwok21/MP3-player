@@ -186,12 +186,12 @@ public class MainActivity extends AppCompatActivity {
                     progressBar.setProgress(player.getProgress());
                     progressUpdateHandler.postDelayed(this, 0);
 
-//                        progressUpdateHandler.post(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                progressTime.setText(player.getProgressInTime());
-//                            }
-//                        });
+                        progressUpdateHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressTime.setText(player.getProgressInTime());
+                            }
+                        });
 
                 }
             };
