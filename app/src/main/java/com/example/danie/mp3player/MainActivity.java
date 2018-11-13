@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String CHANNEL_ID = "MP3Player";
     private static final String NO_MUSIC = "No music selected";
     private static final int NOTI_ID = 1;
+    private static boolean userPermissionGiven = false;
     private static final String SDCARD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
 
     private RecyclerView musicRecyclerView;
@@ -119,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
 
         next.setOnClickListener((v)->{
             if(player.getCurrentSongName()!=null){
-                next();
+                next(player.getCurrentSongName());
             }else{
                 Util.Toast(getApplicationContext(), "No music selected");
             }
@@ -186,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
                     progressBar.setProgress(player.getProgress());
                     progressUpdateHandler.postDelayed(this, 0);
                     if(player.getCompletionStatus()){
-                        loadNextSong(player.getCurrentSongName());
+                        next(player.getCurrentSongName());
                     }
                     progressUpdateHandler.post(new Runnable() {
                         @Override
@@ -221,7 +222,11 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "setupProgress: "+e);
         }
     }
-
+    /*
+    * sets volume seekbar and icon based on current device volume
+    * allow for alteration in device volume based on seekbar
+    * visual feedback via icon as well
+    * */
     private void setupVolume(){
         audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
@@ -264,17 +269,18 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /*
+    * stop song, ie set progress to 0
+    * */
     private void prev(){
         player.stop();
         play.setImageResource(R.drawable.play);
     }
 
-    private void next(){
-        player.next();
-        loadNextSong(player.getCurrentSongName());
-    }
-
-    private void loadNextSong(String currentSongName){
+    /*
+    * load next song on list
+    * */
+    private void next(String currentSongName){
         String nextSongName;
         int index = musicList.indexOf(currentSongName);
         //get next song. If song is at end of list, loop to top
@@ -286,6 +292,9 @@ public class MainActivity extends AppCompatActivity {
         setMusic(nextSongName);
     }
 
+    /*
+    * plays/pauses song based on current state
+    * */
     private void playPause(){
         switch(player.getState()){
             case PLAYING:
@@ -307,22 +316,30 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /*
+    * retrieves all file with types according to audioFormats[]
+    * require permission from users
+    * */
     private List<String> getMusicFromStorage(){
-        final String[] audioFormats = {"mp3", "wav"};
 
-        File downloadFolder = new File(SDCARD);
-        File[] files = downloadFolder.listFiles();
         List<String> musicFiles = new ArrayList<>();
 
-        for(File file:files){
-            String fileName = file.getName();
-            String[] splitString = fileName.split("\\.");
-            String format = splitString[splitString.length - 1];
+        if(userPermissionGiven){
 
-            //if audioformat is one of the supported formats, name will be added to musicFiles
-            for(String audioformat:audioFormats){
-                if(format.equals(audioformat)){
-                    musicFiles.add(file.getName());
+            final String[] audioFormats = {"mp3", "wav"};
+            File downloadFolder = new File(SDCARD);
+            File[] files = downloadFolder.listFiles();
+
+            for(File file:files){
+                String fileName = file.getName();
+                String[] splitString = fileName.split("\\.");
+                String format = splitString[splitString.length - 1];
+
+                //if audioformat is one of the supported formats, name will be added to musicFiles
+                for(String audioformat:audioFormats){
+                    if(format.equals(audioformat)){
+                        musicFiles.add(file.getName());
+                    }
                 }
             }
         }
@@ -364,18 +381,22 @@ public class MainActivity extends AppCompatActivity {
         setMusic(selectedSongName);
     }
 
-//    @Override
-//    protected void onSaveInstanceState(Bundle outState) {
-//        super.onSaveInstanceState(outState);
-//        outState.putString("currentName", currentName);
-//    }
-//
-//    @Override
-//    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-//        super.onRestoreInstanceState(savedInstanceState);
-//        currentName = savedInstanceState.getString("currentName");
-//    }
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Log.i(TAG, "onSaveInstanceState: ");
+    }
 
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        Log.i(TAG, "onRestoreInstanceState: ");
+    }
+
+    /*
+    * set notification
+    * undismissable unless app is closed
+    * */
     private void setupNotification(){
         notificationHandler = new Handler();
 
@@ -401,6 +422,7 @@ public class MainActivity extends AppCompatActivity {
                         .setCustomContentView(notificationLayout)
                         .setPriority(NotificationCompat.PRIORITY_HIGH)
                         .setContentIntent(pi)
+                        .setOngoing(true)
                         .setAutoCancel(false);
 
                 notificationManagerCompat = NotificationManagerCompat.from(getApplicationContext());
@@ -421,6 +443,7 @@ public class MainActivity extends AppCompatActivity {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_BROWSE_STORAGE);
             }
         }else{
+            userPermissionGiven = true;
             Util.Toast(this, "Permission granted");
         }
     }
@@ -432,5 +455,6 @@ public class MainActivity extends AppCompatActivity {
             unbindService(connection);
             connection = null;
         }
+        notificationManagerCompat.cancel(NOTI_ID);
     }
 }
