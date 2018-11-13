@@ -42,8 +42,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String CHANNEL_ID = "MP3Player";
     private static final String NO_MUSIC = "No music selected";
     private static final int NOTI_ID = 1;
-    private static String currentName = NO_MUSIC;
-    private static String currentProgressInTime = "00:00";
     private static final String SDCARD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
 
     private RecyclerView musicRecyclerView;
@@ -186,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
                     progressBar.setProgress(player.getProgress());
                     progressUpdateHandler.postDelayed(this, 0);
                     if(player.getCompletionStatus()){
-                        loadNextSong();
+                        loadNextSong(player.getCurrentSongName());
                     }
                     progressUpdateHandler.post(new Runnable() {
                         @Override
@@ -271,18 +269,19 @@ public class MainActivity extends AppCompatActivity {
 
     private void next(){
         player.next();
-        loadNextSong();
+        loadNextSong(player.getCurrentSongName());
     }
 
-    private void loadNextSong(){
-        int index = musicList.indexOf(currentName);
+    private void loadNextSong(String currentSongName){
+        String nextSongName;
+        int index = musicList.indexOf(currentSongName);
         //get next song. If song is at end of list, loop to top
         if(index<musicList.size()-1){
-            currentName = musicList.get(index+1);
+            nextSongName = musicList.get(index+1);
         }else{
-            currentName = musicList.get(0);
+            nextSongName = musicList.get(0);
         }
-        setMusic();
+        setMusic(nextSongName);
     }
 
     private void playPause(){
@@ -334,13 +333,13 @@ public class MainActivity extends AppCompatActivity {
     * setup notification
     * returns false if no music found
     * */
-    private boolean setMusic(){
+    private boolean setMusic(String currentSongName){
         if(player.getState()==MP3Player.MP3PlayerState.PLAYING){
             player.stop();
         }
 
-        if(!currentName.equals(NO_MUSIC)){
-            String musicPath = SDCARD+"/"+currentName;
+        if(!currentSongName.equals(NO_MUSIC)){
+            String musicPath = SDCARD+"/"+currentSongName;
             player.load(musicPath);
 
             setupProgress();
@@ -358,22 +357,21 @@ public class MainActivity extends AppCompatActivity {
     public void selectMusicFromView(View v){
         TextView tv = v.findViewById(R.id.main_music_name_tv);
 
-        String musicName = tv.getText().toString();
-        currentName = musicName;
-        setMusic();
+        String selectedSongName = tv.getText().toString();
+        setMusic(selectedSongName);
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putString("currentName", currentName);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        currentName = savedInstanceState.getString("currentName");
-    }
+//    @Override
+//    protected void onSaveInstanceState(Bundle outState) {
+//        super.onSaveInstanceState(outState);
+//        outState.putString("currentName", currentName);
+//    }
+//
+//    @Override
+//    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+//        super.onRestoreInstanceState(savedInstanceState);
+//        currentName = savedInstanceState.getString("currentName");
+//    }
 
     private void setupNotification(){
         notificationHandler = new Handler();
@@ -392,7 +390,7 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
 
                 RemoteViews notificationLayout = new RemoteViews(getPackageName(), R.layout.notification_small_layout);
-                notificationLayout.setTextViewText(R.id.notification_music_name_tv, currentName);
+                notificationLayout.setTextViewText(R.id.notification_music_name_tv, player.getCurrentSongName());
 
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
                         .setSmallIcon(R.drawable.logo)

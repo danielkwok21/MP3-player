@@ -14,7 +14,6 @@ public class MusicPlayerService extends Service {
     private static final String TAG = "MusicPlayerService";
     private IBinder musicPlayerBinder;
     private MP3Player player;
-    private String songName = "None";
 
     public MusicPlayerService() {
     }
@@ -33,6 +32,13 @@ public class MusicPlayerService extends Service {
 
     public int getProgress(){
         return player.getProgress();
+    }
+
+    public String getCurrentSongName(){
+        String filePath = player.getFilePath();
+        String[] splitString = filePath.split("/");
+        String songName = splitString[splitString.length - 1];
+        return songName;
     }
 
     public void setProgress(int progress){
@@ -65,11 +71,6 @@ public class MusicPlayerService extends Service {
             return sdf.format(player.getProgress());
     }
 
-    public String getProgressInTime(int progress){
-        //transfer the millisecond to minutes
-        SimpleDateFormat sdf=new SimpleDateFormat("mm:ss");
-        return sdf.format(progress);
-    }
 
     public boolean getCompletionStatus(){
         if(player.getState()==MP3Player.MP3PlayerState.PLAYING){
