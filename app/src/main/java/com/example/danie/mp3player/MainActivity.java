@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
         volumeBar = findViewById(R.id.main_volume_sb);
 
         prev.setOnClickListener((v)->{
-            if(!musicList.isEmpty()){
+            if(player.getCurrentSongName()!=null){
                 prev();
             }else{
                 Util.Toast(getApplicationContext(), "No music selected");
@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         play.setOnClickListener((v)->{
-            if(!musicList.isEmpty()){
+            if(player.getCurrentSongName()!=null){
                 playPause();
             }else{
                 Util.Toast(getApplicationContext(), "No music selected");
@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         next.setOnClickListener((v)->{
-            if(!musicList.isEmpty()){
+            if(player.getCurrentSongName()!=null){
                 next();
             }else{
                 Util.Toast(getApplicationContext(), "No music selected");

@@ -35,9 +35,13 @@ public class MusicPlayerService extends Service {
     }
 
     public String getCurrentSongName(){
+        String songName = null;
         String filePath = player.getFilePath();
-        String[] splitString = filePath.split("/");
-        String songName = splitString[splitString.length - 1];
+        if(filePath!=null){
+            String[] splitString = filePath.split("/");
+            songName = splitString[splitString.length - 1];
+            Log.d(TAG, "getCurrentSongName: SongName: "+songName);
+        }
         return songName;
     }
 
