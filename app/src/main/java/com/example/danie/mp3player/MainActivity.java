@@ -178,14 +178,13 @@ public class MainActivity extends AppCompatActivity {
     private void setupProgress(){
         progressBar.setMax(player.getSongDuration());
 
-        while(player.getCompletionStatus()){
-            try{
-                progressUpdateHandler = new Handler();
-                progressUpdateRunnable = new Runnable(){
-                    @Override
-                    public void run() {
-                        progressBar.setProgress(player.getProgress());
-                        progressUpdateHandler.postDelayed(this, 0);
+        try{
+            progressUpdateHandler = new Handler();
+            progressUpdateRunnable = new Runnable(){
+                @Override
+                public void run() {
+                    progressBar.setProgress(player.getProgress());
+                    progressUpdateHandler.postDelayed(this, 0);
 
 //                        progressUpdateHandler.post(new Runnable() {
 //                            @Override
@@ -194,33 +193,31 @@ public class MainActivity extends AppCompatActivity {
 //                            }
 //                        });
 
-                    }
-                };
-                progressUpdateThread = new Thread(progressUpdateRunnable);
-                progressUpdateThread.start();
+                }
+            };
+            progressUpdateThread = new Thread(progressUpdateRunnable);
+            progressUpdateThread.start();
 
-                progressBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                    @Override
-                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                        if(fromUser){
-                            player.setProgress(progress);
-                        }
+            progressBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    if(fromUser){
+                        player.setProgress(progress);
                     }
+                }
 
-                    @Override
-                    public void onStartTrackingTouch(SeekBar seekBar) {
-                    }
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+                }
 
-                    @Override
-                    public void onStopTrackingTouch(SeekBar seekBar) {
-                        player.setProgress(seekBar.getProgress());
-                    }
-                });
-            }catch(Exception e){
-                Log.d(TAG, "setupProgress: "+e);
-            }
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                    player.setProgress(seekBar.getProgress());
+                }
+            });
+        }catch(Exception e){
+            Log.d(TAG, "setupProgress: "+e);
         }
-
     }
 
     private void setupVolume(){
