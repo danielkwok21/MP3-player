@@ -127,7 +127,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    //setting up service connection
+    /*
+    *setting up service connection
+     */
     private ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -155,6 +157,9 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    /*
+    * setup recyclerview to display all audio file
+    * */
     private void setupRecyclerView(){
 
         recyclerViewHandler = new Handler();
@@ -175,7 +180,9 @@ public class MainActivity extends AppCompatActivity {
         recyclerViewThread.start();
     }
 
-    //setup music progressBar bar
+    /*
+    * sets up song progressbar seekbar
+    * */
     private void setupProgress(){
         progressBar.setMax(player.getSongDuration());
 
@@ -222,6 +229,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "setupProgress: "+e);
         }
     }
+
     /*
     * sets volume seekbar and icon based on current device volume
     * allow for alteration in device volume based on seekbar
@@ -381,18 +389,6 @@ public class MainActivity extends AppCompatActivity {
         setMusic(selectedSongName);
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        Log.i(TAG, "onSaveInstanceState: ");
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        Log.i(TAG, "onRestoreInstanceState: ");
-    }
-
     /*
     * set notification
     * undismissable unless app is closed
@@ -433,12 +429,15 @@ public class MainActivity extends AppCompatActivity {
         notificationThread.start();
     }
 
+    /*
+    * gets permission from user to access storage during runtime
+    * */
     private void getPermission(){
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
             // Permission is not granted
             if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)){
-                Util.Toast(this, "Explanation");
+                Util.Toast(this, "Please allow app to access storage");
             }else{
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_BROWSE_STORAGE);
             }
@@ -448,13 +447,59 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Log.i(TAG, "onSaveInstanceState: ");
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        Log.i(TAG, "onRestoreInstanceState: ");
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.i(TAG, "onDestroy: ");
         if(connection!=null){
             unbindService(connection);
             connection = null;
         }
-        notificationManagerCompat.cancel(NOTI_ID);
+        if(notificationManagerCompat!=null){
+            notificationManagerCompat.cancel(NOTI_ID);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.i(TAG, "onPause: ");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.i(TAG, "onStop: ");
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.i(TAG, "onRestart: ");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i(TAG, "onResume: ");
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.i(TAG, "onStart: ");
     }
 }
