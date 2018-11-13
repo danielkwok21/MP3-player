@@ -30,10 +30,12 @@ public class MusicPlayerService extends Service {
 
     }
 
+    //gets current song progress in milliseconds
     public int getProgress(){
         return player.getProgress();
     }
 
+    //gets current loaded song name
     public String getCurrentSongName(){
         String songName = null;
         String filePath = player.getFilePath();
@@ -45,54 +47,57 @@ public class MusicPlayerService extends Service {
         return songName;
     }
 
+    //sets progress of current loaded song
     public void setProgress(int progress){
         player.setProgress(progress);
     }
 
+    //gets duration of current loaded song
     public int getSongDuration(){
         return player.getDuration();
     }
 
+    //gets current state of mediaplayer (play, paused, stopped, etc)
     public MP3Player.MP3PlayerState getState(){
         return player.getState();
     }
 
+    //stops music
     public void stop(){
         player.stop();
     }
 
+    //pauses music
     public void pause(){
         player.pause();
     }
-    
+
+    //plays music
     public void play(){
         player.play();
     }
 
+    //gets progress in timeformat of current loaded song
     public String getProgressInTime(){
         //transfer the millisecond to minutes
             SimpleDateFormat sdf=new SimpleDateFormat("mm:ss");
             return sdf.format(player.getProgress());
     }
 
-
+    //gets completion status of current loaded song
     public boolean getCompletionStatus(){
         if(player.getState()==MP3Player.MP3PlayerState.PLAYING){
             return player.getProgress()>=player.getDuration();
         }
         return false;
     }
-    
-    public void next(){
-        int duration = player.getDuration();
-        player.setProgress(duration);
-    }
 
-
+    //loads up song from path given
     public void load(String songPath){
         player.load(songPath);
     }
 
+    //service binder
     @Override
     public IBinder onBind(Intent intent) {
         return musicPlayerBinder;

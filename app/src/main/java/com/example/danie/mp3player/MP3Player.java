@@ -62,6 +62,9 @@ public class MP3Player {
         return 0;
     }
 
+    /*
+    * new function added to set progress of song being played according to integer given
+    * */
     public int setProgress(int progress){
         if(mediaPlayer!=null) {
             mediaPlayer.seekTo(progress);
