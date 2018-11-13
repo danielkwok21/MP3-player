@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">MP3Player</string>
+    <string name="playing">Playing:</string>
+    <string name="starting_time">00:00:</string>
 </resources>

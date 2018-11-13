@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     private AudioManager audioManager;
 
     //UI components
+    private TextView selectedSong;
     private TextView progressTime;
     private SeekBar progressBar;
     private ImageView prev;
@@ -90,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initComponents(){
+        selectedSong = findViewById(R.id.main_selected_song_tv);
         progressTime = findViewById(R.id.main_progress_tv);
         musicRecyclerView = findViewById(R.id.music_recyclerView);
         progressBar = findViewById(R.id.main_progress_sb);
@@ -345,6 +347,7 @@ public class MainActivity extends AppCompatActivity {
             setupProgress();
             setupNotification();
             play.setImageResource(R.drawable.pause);
+            selectedSong.setText(currentSongName);
 
             return true;
         }

@@ -8,67 +8,66 @@
 
     <include
         layout="@layout/music_list_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_width="202dp"
+        android:layout_height="290dp"
+        android:layout_marginStart="32dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/main_progress_sb"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
 
     <TextView
         android:id="@+id/main_playing_label_tv"
-        android:layout_width="wrap_content"
+        android:layout_width="50dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="12dp"
         android:text="@string/playing"
         app:layout_constraintBottom_toTopOf="@+id/main_selected_song_tv"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toEndOf="@+id/main_selected_song_tv"
+        app:layout_constraintStart_toStartOf="@+id/main_selected_song_tv" />
 
     <TextView
         android:id="@+id/main_selected_song_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="28dp"
         android:text=""
         android:textSize="25dp"
         app:layout_constraintBottom_toTopOf="@+id/main_progress_tv"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toEndOf="@+id/main_progress_sb"
+        app:layout_constraintStart_toStartOf="@+id/main_progress_sb" />
 
     <TextView
         android:id="@+id/main_progress_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="8dp"
         android:text="@string/starting_time"
         app:layout_constraintBottom_toTopOf="@+id/main_progress_sb"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toEndOf="@+id/main_progress_sb"
+        app:layout_constraintStart_toStartOf="@+id/main_progress_sb" />
 
     <SeekBar
         android:id="@+id/main_progress_sb"
         android:layout_width="314dp"
         android:layout_height="12dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="20dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="12dp"
         app:layout_constraintBottom_toTopOf="@+id/main_play_iv"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <ImageView
         android:id="@+id/main_prev_iv"
         android:layout_width="60dp"
         android:layout_height="60dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="72dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="92dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/main_play_iv"
         app:srcCompat="@drawable/prev" />
@@ -77,20 +76,18 @@
         android:id="@+id/main_play_iv"
         android:layout_width="60dp"
         android:layout_height="60dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="72dp"
+        android:layout_marginBottom="92dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/main_progress_sb"
+        app:layout_constraintStart_toStartOf="@+id/main_progress_sb"
         app:srcCompat="@drawable/play" />
 
     <ImageView
         android:id="@+id/main_next_iv"
         android:layout_width="60dp"
         android:layout_height="60dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginBottom="72dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginBottom="92dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/main_play_iv"
         app:srcCompat="@drawable/next" />
@@ -99,8 +96,8 @@
         android:id="@+id/main_volume_iv"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginStart="0dp"
+        android:layout_marginBottom="36dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@+id/main_progress_sb"
         app:srcCompat="@drawable/vol_high" />
@@ -109,8 +106,8 @@
         android:id="@+id/main_volume_sb"
         android:layout_width="241dp"
         android:layout_height="12dp"
-        android:layout_marginEnd="4dp"
-        android:layout_marginBottom="24dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginBottom="44dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/main_progress_sb" />
 
